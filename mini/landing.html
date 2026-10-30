@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lumo — 생각보다 빠른 AI 메모 앱</title>
+  <style>
+    :root {
+      /* 포인트 컬러: 로열 블루 한 가지 + 같은 색상의 옅은 톤 */
+      --accent: #1f4fb8;
+      --accent-dark: #173d93;
+      --tint-1: #6f9de6;
+      --tint-2: #a9c6f2;
+      --tint-3: #d6e4f8;
+      --tint-4: #eef4fc;
+      --text: #12203d;
+      --muted: #4f5f7d;
+      --bg: #f7faff;
+      --white: #ffffff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                   "Malgun Gothic", "Segoe UI", sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    .container {
+      position: relative;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* 버튼: 각진 모서리 + 안쪽 점선 */
+    .btn {
+      display: inline-block;
+      padding: 18px 40px;
+      border-radius: 2px;
+      background: var(--accent);
+      color: var(--white);
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-decoration: none;
+      outline: 1px dashed rgba(255, 255, 255, 0.6);
+      outline-offset: -6px;
+      box-shadow: 0 10px 24px rgba(31, 79, 184, 0.25);
+      transition: background .2s, transform .2s, box-shadow .2s;
+    }
+    .btn:hover {
+      background: var(--accent-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px rgba(31, 79, 184, 0.32);
+    }
+    .btn:focus-visible { outline: 3px solid var(--tint-2); outline-offset: 3px; }
+
+    .btn-light {
+      background: var(--white);
+      color: var(--accent);
+      outline-color: rgba(31, 79, 184, 0.45);
+      box-shadow: 0 10px 24px rgba(8, 24, 64, 0.25);
+    }
+    .btn-light:hover { background: var(--tint-4); }
+
+    /* 회전한 사각형 장식 */
+    .deco { position: absolute; pointer-events: none; }
+    .sq {
+      position: absolute;
+      transform: rotate(45deg);
+      box-shadow: 0 8px 20px rgba(31, 79, 184, 0.12);
+    }
+
+    /* Hero */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 168px 0 160px;
+      background: linear-gradient(120deg, var(--white) 0%, var(--tint-4) 35%, var(--tint-3) 70%, var(--tint-2) 100%);
+    }
+    .hero .deco { inset: 0; }
+    .hero .content { position: relative; z-index: 1; max-width: 560px; }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    .brand::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      background: var(--accent);
+      transform: rotate(45deg);
+    }
+    .hero h1 {
+      font-size: clamp(40px, 6vw, 68px);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      margin-bottom: 24px;
+    }
+    .hero h1 em { font-style: normal; color: var(--accent); }
+    .hero p {
+      margin-bottom: 48px;
+      font-size: clamp(17px, 2vw, 19px);
+      color: var(--muted);
+    }
+
+    /* Hero 오른쪽 장식 배치 */
+    .big {
+      right: -120px;
+      bottom: -200px;
+      width: 460px;
+      height: 460px;
+      background: var(--accent);
+      box-shadow: none;
+    }
+    .big::after {
+      content: "";
+      position: absolute;
+      inset: 22px;
+      border: 2px dashed rgba(255, 255, 255, 0.7);
+    }
+    .s1 { right: 300px; top: 120px;  width: 200px; height: 200px; background: linear-gradient(135deg, var(--tint-1), var(--accent)); }
+    .s2 { right: 140px; top: 40px;   width: 120px; height: 120px; background: var(--tint-2); }
+    .s3 { right: 560px; top: 300px;  width: 46px;  height: 46px;  background: var(--white); }
+    .s4 { right: 490px; top: 360px;  width: 56px;  height: 56px;  background: var(--tint-1); opacity: .7; }
+    .s5 { right: 30px;  top: 250px;  width: 80px;  height: 80px;  background: var(--tint-1); opacity: .8; }
+    .s6 { left: -50px;  bottom: 60px; width: 120px; height: 120px; background: var(--tint-3); }
+    .s7 { left: 70px;   bottom: 220px; width: 44px; height: 44px; background: var(--white); }
+
+    /* Features */
+    .features { position: relative; padding: 128px 0; background: var(--bg); }
+    .section-title {
+      text-align: center;
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 72px;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+    }
+    .card {
+      position: relative;
+      padding: 48px 32px 40px;
+      border-radius: 4px;
+      background: var(--white);
+      border-top: 4px solid var(--accent);
+      box-shadow: 0 18px 40px rgba(31, 79, 184, 0.10);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 24px 48px rgba(31, 79, 184, 0.16);
+    }
+    .card .icon {
+      display: grid;
+      place-items: center;
+      width: 60px;
+      height: 60px;
+      margin: 0 0 32px 6px;
+      transform: rotate(45deg);
+      background: linear-gradient(135deg, var(--tint-3), var(--tint-2));
+    }
+    .card .icon span { transform: rotate(-45deg); font-size: 26px; }
+    .card h3 {
+      font-size: 21px;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+    .card p { color: var(--muted); font-size: 16px; }
+
+    /* Bottom CTA */
+    .cta { padding: 0 0 128px; background: var(--bg); }
+    .cta-box {
+      position: relative;
+      overflow: hidden;
+      padding: 104px 32px;
+      text-align: center;
+      border-radius: 4px;
+      background: linear-gradient(120deg, var(--accent-dark) 0%, var(--accent) 60%, var(--tint-1) 100%);
+      color: var(--white);
+    }
+    .cta-box::before {
+      content: "";
+      position: absolute;
+      inset: 16px;
+      border: 2px dashed rgba(255, 255, 255, 0.45);
+      pointer-events: none;
+    }
+    .cta-box .c1 { left: -60px;  top: -60px;   width: 180px; height: 180px; background: rgba(255,255,255,.10); box-shadow: none; }
+    .cta-box .c2 { right: -40px; bottom: -70px; width: 220px; height: 220px; background: rgba(255,255,255,.12); box-shadow: none; }
+    .cta-box .c3 { right: 140px; top: 40px;    width: 36px;  height: 36px;  background: rgba(255,255,255,.35); box-shadow: none; }
+    .cta-box h2, .cta-box p, .cta-box .btn { position: relative; }
+    .cta-box h2 {
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+    .cta-box p {
+      color: rgba(255, 255, 255, 0.82);
+      font-size: 18px;
+      margin-bottom: 44px;
+    }
+
+    /* Footer */
+    footer {
+      padding: 32px 0;
+      background: var(--white);
+      border-top: 1px solid var(--tint-3);
+      text-align: center;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .container { padding: 0 16px; }
+      .hero { padding: 112px 0 200px; }
+      .hero .content { max-width: none; }
+      .big { width: 260px; height: 260px; right: -90px; bottom: -150px; }
+      .big::after { inset: 14px; }
+      .s1 { width: 110px; height: 110px; right: 120px; top: auto; bottom: 40px; }
+      .s2 { width: 70px; height: 70px; right: 24px; top: 24px; }
+      .s3, .s4, .s5, .s7 { display: none; }
+      .s6 { width: 80px; height: 80px; left: -40px; bottom: 30px; }
+      .features { padding: 80px 0; }
+      .section-title { margin-bottom: 44px; }
+      .cards { grid-template-columns: 1fr; gap: 20px; }
+      .cta { padding-bottom: 80px; }
+      .cta-box { padding: 72px 24px; }
+      .cta-box .c3 { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="hero">
+    <div class="deco" aria-hidden="true">
+      <div class="sq big"></div>
+      <div class="sq s1"></div>
+      <div class="sq s2"></div>
+      <div class="sq s3"></div>
+      <div class="sq s4"></div>
+      <div class="sq s5"></div>
+      <div class="sq s6"></div>
+      <div class="sq s7"></div>
+    </div>
+    <div class="container">
+      <div class="content">
+        <span class="brand">Lumo</span>
+        <h1>생각보다 빠른<br><em>AI 메모 앱</em></h1>
+        <p>떠오른 생각을 적기만 하세요. 정리와 요약, 다시 찾는 일은 Lumo가 알아서 합니다.</p>
+        <a class="btn" href="#">무료로 시작하기</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="features">
+      <div class="container">
+        <h2 class="section-title">메모가 가벼워지는 세 가지 이유</h2>
+        <div class="cards">
+          <article class="card">
+            <div class="icon" aria-hidden="true"><span>⚡</span></div>
+            <h3>즉시 기록</h3>
+            <p>앱을 여는 순간 바로 입력 준비 완료.<br>단축키 한 번이면 어디서든 메모가 열립니다.</p>
+          </article>
+          <article class="card">
+            <div class="icon" aria-hidden="true"><span>✨</span></div>
+            <h3>AI 자동 정리</h3>
+            <p>흩어진 메모에 제목과 태그를 붙여 줍니다.<br>긴 글은 핵심만 세 줄로 요약해 드려요.</p>
+          </article>
+          <article class="card">
+            <div class="icon" aria-hidden="true"><span>🔍</span></div>
+            <h3>말하듯 검색</h3>
+            <p>"지난주 회의에서 정한 거"처럼 물어보세요.<br>단어가 달라도 뜻으로 찾아냅니다.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta">
+      <div class="container">
+        <div class="cta-box">
+          <div class="sq c1" aria-hidden="true"></div>
+          <div class="sq c2" aria-hidden="true"></div>
+          <div class="sq c3" aria-hidden="true"></div>
+          <h2>지금 바로 더 빠르게 메모하세요</h2>
+          <p>가입은 30초, 카드 등록 없이 시작할 수 있어요.</p>
+          <a class="btn btn-light" href="#">무료로 시작하기</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">© 2026 Lumo. All rights reserved.</div>
+  </footer>
+
+</body>
+</html>
