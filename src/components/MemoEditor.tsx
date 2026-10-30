@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { domToBlocks } from "@/lib/editorDom";
-import { saveMemo } from "@/lib/memoStorage";
+import { blocksToHtml, domToBlocks } from "@/lib/editorDom";
+import { saveMemo, updateMemo, type SavedMemo } from "@/lib/memoStorage";
 import { ButtonPrimary } from "./ButtonPrimary";
 import { IconLink } from "./IconButton";
 import { IconChevronLeft } from "./icons";
@@ -46,14 +46,23 @@ function readActiveFormats() {
   } satisfies Record<Format, boolean>;
 }
 
-export function MemoEditor() {
+const fieldsOf = (memo?: SavedMemo): Fields =>
+  memo ? { title: memo.title, category: memo.category, label: memo.label } : INITIAL_FIELDS;
+
+// memo가 있으면 그 메모를 고치는 화면이고, 없으면 새 메모를 쓰는 화면이다.
+export function MemoEditor({ memo }: { memo?: SavedMemo }) {
   const router = useRouter();
   const titleRef = useRef<HTMLInputElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
+  // 메모 목록이 다시 읽혀도 고치던 글이 덮이지 않게, 화면이 열릴 때의 메모만 쓴다.
+  const memoRef = useRef(memo);
+  useEffect(() => {
+    memoRef.current = memo;
+  });
 
-  const [fields, setFields] = useState<Fields>(INITIAL_FIELDS);
+  const [fields, setFields] = useState<Fields>(() => fieldsOf(memo));
   const { title, category, label } = fields;
-  const [bodyEmpty, setBodyEmpty] = useState(true);
+  const [bodyEmpty, setBodyEmpty] = useState(!memo?.blocks.length);
   const [active, setActive] = useState<Record<Format, boolean>>({
     bold: false,
     h2: false,
@@ -63,10 +72,16 @@ export function MemoEditor() {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
-  // 작성 화면은 열 때마다 빈 상태여야 한다. 화면을 떠날 때 비워 두어서, 저장하지 않고 나갔다 와도
-  // (화면 상태가 유지되는 경우 포함) 이전 글이 남지 않는다.
+  // 화면은 열 때마다 시작 상태여야 한다. 새 메모는 빈 상태, 수정은 저장된 메모 그대로다.
+  // 화면을 떠날 때 비워 두어서, 저장하지 않고 나갔다 와도(화면 상태가 유지되는 경우 포함) 이전 글이 남지 않는다.
   useEffect(() => {
     const body = bodyRef.current;
+    const start = memoRef.current;
+    if (body && start) {
+      body.innerHTML = blocksToHtml(start.blocks);
+      setFields(fieldsOf(start));
+      setBodyEmpty(domToBlocks(body).length === 0);
+    }
     return () => {
       body?.replaceChildren();
       setFields(INITIAL_FIELDS);
@@ -117,24 +132,28 @@ export function MemoEditor() {
       return;
     }
     setSaving(true);
-    const saved = await saveMemo({
+    const content = {
       title: title.trim(),
       category,
       label,
       blocks: bodyRef.current ? domToBlocks(bodyRef.current) : [],
-    });
+    };
+    const saved = memo ? await updateMemo(memo.id, content) : await saveMemo(content);
     if (!saved) {
       setSaving(false);
       setError("저장하지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요.");
       return;
     }
-    router.push("/");
+    router.push(memo ? `/memo/${memo.id}` : "/");
   };
 
   return (
     <div className="mx-auto flex w-full max-w-[430px] flex-1 flex-col bg-surface-page px-space-16 pt-space-48">
       <header className="flex items-center">
-        <IconLink label="홈으로 돌아가기" href="/">
+        <IconLink
+          label={memo ? "메모로 돌아가기" : "홈으로 돌아가기"}
+          href={memo ? `/memo/${memo.id}` : "/"}
+        >
           <IconChevronLeft />
         </IconLink>
       </header>

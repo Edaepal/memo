@@ -38,6 +38,35 @@ const hasText = (runs: Run[]) => runs.some((run) => run.text.trim().length > 0);
 const isBlockEl = (node: Node): node is HTMLElement =>
   node instanceof HTMLElement && BLOCK_TAGS.has(node.tagName);
 
+const escapeHtml = (text: string) =>
+  text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+function runsToHtml(runs: Run[]) {
+  return runs
+    .map((run) => {
+      const html = escapeHtml(run.text).replace(/\n/g, "<br>");
+      return run.bold ? `<b>${html}</b>` : html;
+    })
+    .join("");
+}
+
+// 저장된 블록을 편집기(contenteditable)에 넣을 HTML로 되돌린다. domToBlocks의 반대 방향이다.
+export function blocksToHtml(blocks: Block[]) {
+  return blocks
+    .map((block) => {
+      switch (block.kind) {
+        case "h2":
+        case "h3":
+          return `<${block.kind}>${escapeHtml(block.text)}</${block.kind}>`;
+        case "p":
+          return `<div>${runsToHtml(block.runs)}</div>`;
+        case "list":
+          return `<ul>${block.items.map((item) => `<li>${runsToHtml(item)}</li>`).join("")}</ul>`;
+      }
+    })
+    .join("");
+}
+
 // 편집기(contenteditable)의 DOM을 저장용 블록으로 바꾼다. 서식은 블록 종류와 굵게만 남긴다.
 // 브라우저가 줄마다 만드는 <div> 안에 목록·제목이 중첩될 수 있어서 안쪽까지 내려가며 읽는다.
 export function domToBlocks(root: HTMLElement): Block[] {

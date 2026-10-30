@@ -10,6 +10,15 @@ async function MemoArticle({ params }: { params: Promise<{ id: string }> }) {
   return <SavedMemoArticle id={id} />;
 }
 
+async function EditLink({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  return (
+    <ButtonPrimary tone="edit" href={`/memo/${id}/edit`}>
+      수정하기
+    </ButtonPrimary>
+  );
+}
+
 export default function MemoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   return (
     <div className="mx-auto flex w-full max-w-[430px] flex-1 flex-col bg-surface-page px-space-16 pt-space-48">
@@ -41,7 +50,15 @@ export default function MemoDetailPage({ params }: { params: Promise<{ id: strin
         </Suspense>
       </main>
       <div className="sticky bottom-0 bg-surface-page pb-space-34 pt-space-16">
-        <ButtonPrimary tone="edit">수정하기</ButtonPrimary>
+        <Suspense
+          fallback={
+            <ButtonPrimary tone="edit" disabled>
+              수정하기
+            </ButtonPrimary>
+          }
+        >
+          <EditLink params={params} />
+        </Suspense>
       </div>
     </div>
   );

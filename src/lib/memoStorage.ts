@@ -90,6 +90,17 @@ export async function saveMemo(memo: Pick<SavedMemo, "title" | "category" | "lab
   return true;
 }
 
+// 제목, 분류, 색, 내용을 고친다. 작성 날짜와 고정 상태는 그대로 둔다. 저장하지 못하면 false
+export async function updateMemo(
+  id: string,
+  changes: Pick<SavedMemo, "title" | "category" | "label" | "blocks">,
+) {
+  const { error } = await supabase.from("memos").update(changes).eq("id", id);
+  if (error) return false;
+  await refreshMemos();
+  return true;
+}
+
 // 고정 상태는 메모에 함께 저장한다. 화면에는 먼저 반영하고, 저장에 실패하면 되돌린다.
 export async function setPinned(id: string, pinned: boolean) {
   const previous = memos;
