@@ -49,7 +49,7 @@ export default function MemoDetailPage({ params }: { params: Promise<{ id: strin
           <MemoArticle params={params} />
         </Suspense>
       </main>
-      <div className="sticky bottom-0 bg-surface-page pb-space-34 pt-space-16">
+      <div className="sticky bottom-[0px] bg-surface-page pb-space-34 pt-space-16">
         <Suspense
           fallback={
             <ButtonPrimary tone="edit" disabled>

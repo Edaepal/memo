@@ -251,7 +251,7 @@ export function MemoEditor({ memo }: { memo?: SavedMemo }) {
         </section>
       </main>
 
-      <div className="sticky bottom-0 bg-surface-page pb-space-34 pt-space-16">
+      <div className="sticky bottom-[0px] bg-surface-page pb-space-34 pt-space-16">
         {error && (
           <p role="alert" className="pb-space-8 text-center text-caption-sm text-label-pink">
             {error}

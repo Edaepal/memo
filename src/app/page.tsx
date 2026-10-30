@@ -33,7 +33,7 @@ export default function Home() {
           </BlurFade>
         </ReplayOnShow>
       </main>
-      <div className="sticky bottom-0 bg-surface-page pb-space-34 pt-space-16">
+      <div className="sticky bottom-[0px] bg-surface-page pb-space-34 pt-space-16">
         <ButtonPrimary icon href="/write">
           새 메모 쓰기
         </ButtonPrimary>
